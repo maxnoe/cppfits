@@ -17,3 +17,6 @@ using value_t = std::variant<std::string, bool, int64_t, double>;
 ```
 and I plan to use this also for other polymorphic entities, like the
 different types of FITS extension HDUs (Image, Binary Table, ASCII Table, ...).
+
+
+After C++, I also want to do this in Rust and Julia... might take a while though.
