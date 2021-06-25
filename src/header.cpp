@@ -41,7 +41,7 @@ HeaderEntry::value_t parse_value(std::string_view s) {
 
     std::string str{s};
     if (std::regex_match(str, integer_regex)) {
-        return std::stoll(str);
+        return static_cast<int64_t>(std::stoll(str));
     }
     if (std::regex_match(str, floating_regex)) {
         return std::stod(str);
