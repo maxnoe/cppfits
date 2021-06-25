@@ -2,8 +2,9 @@
 #include <regex>
 #include "fits/header.h"
 
-const std::regex integer_regex{R"([+-]?\d+)"};
-const std::regex replace_fits_exponent{R"([+-]?(\d+)?[.]?(\d+)?([eEdD][+-]?\d+)?)"};
+const std::regex float_regex{R"([+-]? *\d+)"};
+const std::regex double_regex{R"([+-]? *(\d+)?[.]?(\d+)? *([eEdD] *[+-]? *\d+)?)"};
+const std::regex string_regex{R"('((?:[^']|'')*)'(?: */ *(.*)) *?)"};
 
 namespace fits {
 
@@ -16,7 +17,7 @@ void unescape_single_quotes(std::string& s) {
     }
 }
 
-void replace_fits_expent(std::string& s) {
+void replace_fits_exponent(std::string& s) {
     for (auto& exp: {"d", "D"}) {
         size_t pos = s.find(exp);
         if (pos != std::string::npos) {
@@ -49,11 +50,11 @@ HeaderEntry::value_t parse_value(std::string_view s) {
     }
 
     std::string str{s};
-    if (std::regex_match(str, integer_regex)) {
+    if (std::regex_match(str, float_regex)) {
         return static_cast<int64_t>(std::stoll(str));
     }
-    if (std::regex_match(str, replace_fits_exponent)) {
-        replace_fits_expent(str);
+    if (std::regex_match(str, double_regex)) {
+        replace_fits_exponent(str);
         return std::stod(str);
     }
     throw std::runtime_error(std::string(s));
@@ -64,26 +65,48 @@ HeaderEntry HeaderEntry::parse(std::string_view line) {
     std::string comment;
     HeaderEntry::value_t value;
 
+    // Blank
+    if (key == "") {
+        return HeaderEntry();
+    }
+
+    // Comment and History fields have the comment as rest of the line
     if (key == "COMMENT" || key == "HISTORY") {
         comment = std::string(right_strip(line.substr(8)));
-    } else {
-        size_t comment_start = line.find_first_of('/');
-        if (comment_start != std::string_view::npos) {
-            comment = strip(line.substr(comment_start + 1));
-            line.remove_suffix(line.size() - comment_start);
+        return HeaderEntry(key, value, comment);
+    }
+
+    // The value indicator
+    if (line.substr(8, 2) == "= ") {
+        std::string_view value_part = line.substr(10);
+
+        // First check for string, since the string regex catches
+        // the case where / might appear inside the string
+        std::string value_str{value_part};
+        std::smatch match;
+        if (std::regex_match(value_str, match, string_regex)) {
+            value = match[1];
+            std::string m2 = match[2];
+            comment = std::string(right_strip(m2));
+
+            return HeaderEntry(key, value, comment);
         }
 
-        if (line.substr(8, 2) == "= ") {
-            try {
-                value = parse_value(line.substr(10));
-            } catch (std::exception& e) {
-                throw std::runtime_error("Error parsing header line:" + std::string{line} + e.what());
-            }
+        size_t comment_start = value_part.find_first_of('/');
+        if (comment_start != std::string_view::npos) {
+            comment = strip(value_part.substr(comment_start + 1));
+            value_part.remove_suffix(value_part.size() - comment_start);
         }
+
+        try {
+            value = parse_value(value_part);
+        } catch (std::exception& e) {
+            throw std::runtime_error("Error parsing header line:" + std::string{line} + e.what());
+        }
+
     }
 
     return HeaderEntry(key, value, comment);
-};
-
+}
 
 }
