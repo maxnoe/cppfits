@@ -1,9 +1,9 @@
-#include "fits/header.h"
 #include <iostream>
 #include <regex>
+#include "fits/header.h"
 
 const std::regex integer_regex{R"([+-]?\d+)"};
-const std::regex floating_regex{R"([+-]?(\d+)?[.]?(\d+)?([eEdD][+-]?\d+)?)"};
+const std::regex replace_fits_exponent{R"([+-]?(\d+)?[.]?(\d+)?([eEdD][+-]?\d+)?)"};
 
 namespace fits {
 
@@ -13,6 +13,15 @@ void unescape_single_quotes(std::string& s) {
     while (pos != std::string::npos) {
         s.replace(pos, 2, "'");
         pos = s.find("''", pos);
+    }
+}
+
+void replace_fits_expent(std::string& s) {
+    for (auto& exp: {"d", "D"}) {
+        size_t pos = s.find(exp);
+        if (pos != std::string::npos) {
+            s.replace(pos, 1, "e");
+        }
     }
 }
 
@@ -43,7 +52,8 @@ HeaderEntry::value_t parse_value(std::string_view s) {
     if (std::regex_match(str, integer_regex)) {
         return static_cast<int64_t>(std::stoll(str));
     }
-    if (std::regex_match(str, floating_regex)) {
+    if (std::regex_match(str, replace_fits_exponent)) {
+        replace_fits_expent(str);
         return std::stod(str);
     }
     throw std::runtime_error(std::string(s));
@@ -66,8 +76,8 @@ HeaderEntry HeaderEntry::parse(std::string_view line) {
         if (line.substr(8, 2) == "= ") {
             try {
                 value = parse_value(line.substr(10));
-            } catch (...) {
-                throw std::runtime_error("Error parsing header line:" + std::string{line});
+            } catch (std::exception& e) {
+                throw std::runtime_error("Error parsing header line:" + std::string{line} + e.what());
             }
         }
     }

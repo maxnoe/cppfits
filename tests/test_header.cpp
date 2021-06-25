@@ -75,6 +75,9 @@ TEST_CASE("HeaderEntry::parse") {
     e = HeaderEntry::parse("FOOBAR  = +12.345e6                                                             ");
     REQUIRE(std::get<double>(e.value) == 12.345e6);
 
+    e = HeaderEntry::parse("FOOBAR  = +12.345D6                                                             ");
+    REQUIRE(std::get<double>(e.value) == 12.345e6);
+
     e = HeaderEntry::parse("COMMENT Hello this is a comment                                                 ");
     REQUIRE(e.key == "COMMENT");
     REQUIRE(e.comment == "Hello this is a comment");
