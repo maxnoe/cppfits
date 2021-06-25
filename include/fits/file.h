@@ -71,7 +71,7 @@ std::unique_ptr<HDU> FITS::read_next_hdu() {
     bool end_found = false;
     char block[BLOCK_SIZE];
 
-    Header header;
+    auto hdu = std::make_unique<HDU>();
 
     while (!end_found) {
         stream.read(block, BLOCK_SIZE);
@@ -80,19 +80,17 @@ std::unique_ptr<HDU> FITS::read_next_hdu() {
             throw FITSException("Premature EOF");
         }
 
+
         for (size_t i=0; i < N_ENTRIES_BLOCK; i++) {
             std::string_view line(&block[i * ENTRY_SIZE], ENTRY_SIZE);
-            header.lines.push_back(HeaderEntry::parse(line));
-            std::cout << header.lines.back().key << '\n';
-            if (header.lines.back().key == "END") {
+            hdu->header.lines.push_back(HeaderEntry::parse(line));
+            if (hdu->header.lines.back().key == "END") {
                 end_found = true;
                 break;
             }
         }
-
-
     }
-    return std::make_unique<HDU>();
+    return hdu;
 }
 
 }

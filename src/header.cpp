@@ -23,7 +23,7 @@ HeaderEntry::value_t parse_value(std::string_view s) {
     if (s.at(0) == '\'') {
         s.remove_prefix(1);
         if (s.back() != '\'') {
-            throw std::runtime_error("Invalid string in header");
+            throw std::runtime_error("Invalid string in header '" + std::string{s} + "'");
         }
         s.remove_suffix(1);
         std::string str{s};
@@ -64,7 +64,11 @@ HeaderEntry HeaderEntry::parse(std::string_view line) {
         }
 
         if (line.substr(8, 2) == "= ") {
-            value = parse_value(line.substr(10));
+            try {
+                value = parse_value(line.substr(10));
+            } catch (...) {
+                throw std::runtime_error("Error parsing header line:" + std::string{line});
+            }
         }
     }
 
