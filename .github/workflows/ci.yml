@@ -5,6 +5,10 @@ on: [push]
 jobs:
   ubuntu-build:
     runs-on: ubuntu-latest
+    env:
+      CC: gcc-11
+      CXX: g++-11
+
     steps:
     - name: Checkout
       uses: actions/checkout@v2

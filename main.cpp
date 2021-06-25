@@ -1,7 +1,11 @@
+#include <string>
+#include <iostream>
+#include <variant>
 #include "fits/file.h"
+
 int main (int argc, char* argv[]) {
     std::string path;
-    if (argc == 1) { 
+    if (argc == 1) {
         path = "./tests/data/empty_primary_only.fits";
     } else {
         path = argv[1];
@@ -20,6 +24,5 @@ int main (int argc, char* argv[]) {
         std::cout << '\n';
     }
 
-    
     return 0;
 }
