@@ -36,10 +36,13 @@ class FITS {
         T read(const std::streamsize n);
 
     public:
+        FITS() = default;
         FITS(const std::string& filename);
         std::vector<HDU> hdus;
 
         HDU& read_next_hdu();
+        bool has_next_hdu();
+        std::streampos address_of_next_hdu();
         void open(const std::string& filename);
 };
 

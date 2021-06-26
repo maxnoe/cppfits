@@ -7,6 +7,7 @@
 #include <unordered_map>
 
 #include "fits/constants.h"
+#include "fits/utils.h"
 
 
 namespace fits {
@@ -48,7 +49,7 @@ struct HeaderEntry {
     static HeaderEntry parse(std::string_view line);
 
     bool has_value() const {
-        return !std::holds_alternative<no_value>(value) || value.valueless_by_exception();
+        return value.index() != 0 && !value.valueless_by_exception();
     }
 };
 
@@ -60,16 +61,12 @@ struct Header {
 
 
     size_t byte_size() const {
-        size_t n_bytes = lines.size() * ENTRY_SIZE;
-        if (n_bytes % BLOCK_SIZE != 0) {
-            n_bytes += BLOCK_SIZE - (n_bytes % BLOCK_SIZE);
-        }
-        return n_bytes;
+        return add_padding(lines.size() * ENTRY_SIZE);
     }
 
     template<typename T>
-    T get(const std::string& key) {
-        return std::get<T>(vals.at(key));
+    T get(const std::string& key) const {
+        return std::get<T>(vals.at(key).value);
     }
 
     private:

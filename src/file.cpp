@@ -12,32 +12,48 @@ std::string FITS::read<std::string>(const std::streamsize n){
 
 void FITS::open(const std::string& filename) {
     stream.open(filename, std::ios::in | std::ios::binary);
-    stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    HeaderEntry marker;
+    try {
+        marker = HeaderEntry::parse(read<std::string>(ENTRY_SIZE));
+        if (marker.key != "SIMPLE" || !std::get<bool>(marker.value)) {
+            throw FITSException("Not a FITS file");
+        }
+    } catch (...) {
+        throw FITSException("Not a FITS file");
+    }
+    stream.seekg(0);
 }
 
 
 FITS::FITS(const std::string& filename){
     open(filename);
-    auto marker = read<std::string>(MARKER.size());
-    if (marker != MARKER) {
-        throw FITSException("Not a FITS file");
+}
+
+std::streampos FITS::address_of_next_hdu() {
+    if (hdus.empty()) {
+        return 0;
     }
-    stream.seekg(0);
-    hdus.push_back(read_next_hdu());
+    const auto get_next = [](const auto& hdu) {return hdu.address + hdu.size();};
+    return std::visit(get_next, hdus.back());
 }
 
-size_t get_size(BaseHDU& hdu) {
-    return hdu.size();
+bool FITS::has_next_hdu() {
+    std::streampos next_address = address_of_next_hdu();
+    stream.seekg(next_address);
+    stream.peek();
+    return stream.good();
 }
-
 
 HDU& FITS::read_next_hdu() {
-    size_t next_hdu = hdus.size() == 0 ? 0 : std::visit(get_size, hdus.back());
-    stream.seekg(next_hdu);
+    if (!has_next_hdu()) {
+        throw FITSException("No more hdus in the file");
+    }
+
+    size_t next_address = address_of_next_hdu();
     bool end_found = false;
     char block[BLOCK_SIZE];
 
-    hdus.push_back(ImageHDU(next_hdu));
+    hdus.push_back(ImageHDU(next_address));
     ImageHDU& hdu = std::get<ImageHDU>(hdus.back());
 
     while (!end_found) {
@@ -47,12 +63,12 @@ HDU& FITS::read_next_hdu() {
             throw FITSException("Premature EOF");
         }
 
-
         for (size_t i=0; i < N_ENTRIES_BLOCK; i++) {
             std::string_view line(&block[i * ENTRY_SIZE], ENTRY_SIZE);
             hdu.header.lines.push_back(HeaderEntry::parse(line));
             HeaderEntry& entry = hdu.header.lines.back();
 
+            // add entries with values to the hash map for easy lookup
             if (entry.has_value()) {
                 hdu.header.vals[entry.key] = entry;
             }
