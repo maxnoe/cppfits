@@ -1,5 +1,6 @@
 from astropy.io import fits
 import numpy as np
+from pathlib import Path
 
 def invalid():
     with open('./tests/data/invalid', 'wb') as f:
@@ -24,6 +25,7 @@ def image_extension():
 
 
 def create_all():
+    Path('tests/data').mkdir(parents=True, exist_ok=True)
     empty()
     simple_image()
     image_extension()
