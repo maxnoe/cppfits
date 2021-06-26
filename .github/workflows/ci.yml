@@ -34,4 +34,4 @@ jobs:
 
     - name: Run tests
       run: |
-        ctest --test-dir build/tests
+        ./build/tests/tests --use-colour=yes
