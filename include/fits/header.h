@@ -4,6 +4,9 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <unordered_map>
+
+#include "fits/constants.h"
 
 
 namespace fits {
@@ -27,7 +30,9 @@ inline std::string_view strip(std::string_view s) {
 
 
 struct HeaderEntry {
-    using value_t = std::variant<std::string, bool, int64_t, double>;
+    using no_value = std::monostate;
+    using value_t = std::variant<no_value, std::string, bool, int64_t, double>;
+
     std::string key;
     value_t value = "";
     std::string comment;
@@ -41,11 +46,34 @@ struct HeaderEntry {
     {};
 
     static HeaderEntry parse(std::string_view line);
+
+    bool has_value() const {
+        return !std::holds_alternative<no_value>(value) || value.valueless_by_exception();
+    }
 };
 
 
 struct Header {
+    friend class FITS;
+
     std::vector<HeaderEntry> lines;
+
+
+    size_t byte_size() const {
+        size_t n_bytes = lines.size() * ENTRY_SIZE;
+        if (n_bytes % BLOCK_SIZE != 0) {
+            n_bytes += BLOCK_SIZE - (n_bytes % BLOCK_SIZE);
+        }
+        return n_bytes;
+    }
+
+    template<typename T>
+    T get(const std::string& key) {
+        return std::get<T>(vals.at(key));
+    }
+
+    private:
+        std::unordered_map<std::string, HeaderEntry> vals;
 };
 
 } // namespace fits
