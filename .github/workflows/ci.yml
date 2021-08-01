@@ -28,7 +28,7 @@ jobs:
         python ./create_test_files.py
 
         curl -L https://github.com/xtensor-stack/xtl/archive/refs/tags/0.7.2.tar.gz | tar xz
-        cmake -S xtl-0.7.2 -B xtensor-0.23.10
+        cmake -S xtl-0.7.2 -B xtl-0.7.2
         cmake --install xtl-0.7.2
 
         curl -L https://github.com/xtensor-stack/xtensor/archive/refs/tags/0.23.10.tar.gz | tar xz
