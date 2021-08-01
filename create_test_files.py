@@ -30,11 +30,6 @@ def uint16_image():
 
 
 @test_file
-def int8_image():
-    primary = fits.PrimaryHDU(data=np.arange(12).reshape(4, 3).astype(np.int8))
-    return fits.HDUList([primary])
-
-@test_file
 def float_image():
     primary = fits.PrimaryHDU(data=np.arange(12).reshape(4, 3).astype(np.float32))
     return fits.HDUList([primary])
