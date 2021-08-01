@@ -1,4 +1,5 @@
 #include "fits/file.h"
+#include "fits/hdu.h"
 
 namespace fits {
 
@@ -33,8 +34,10 @@ std::streampos FITS::address_of_next_hdu() {
     if (hdus.empty()) {
         return 0;
     }
-    const auto get_next = [](const auto& hdu) {return hdu.address + hdu.size();};
-    return std::visit(get_next, hdus.back());
+    const auto get_next_address = [](const auto& hdu) {
+        return hdu.address + hdu.byte_size();
+    };
+    return std::visit(get_next_address, hdus.back());
 }
 
 bool FITS::has_next_hdu() {
@@ -53,7 +56,7 @@ HDU& FITS::read_next_hdu() {
     bool end_found = false;
     char block[BLOCK_SIZE];
 
-    hdus.push_back(ImageHDU(next_address));
+    hdus.push_back(ImageHDU(next_address, *this));
     ImageHDU& hdu = std::get<ImageHDU>(hdus.back());
 
     while (!end_found) {

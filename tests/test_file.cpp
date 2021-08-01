@@ -1,5 +1,6 @@
 #include "catch2/catch.hpp"
 #include "fits/file.h"
+#include "fits/hdu.h"
 #include "fits/constants.h"
 
 TEST_CASE("FITS open invalid") {
@@ -28,7 +29,7 @@ TEST_CASE("FITS open empty primary") {
     REQUIRE(primary_hdu.data_size() == 0);
 
     // this file contains a single header block
-    REQUIRE(primary_hdu.size() == BLOCK_SIZE);
+    REQUIRE(primary_hdu.byte_size() == BLOCK_SIZE);
 
     // no more hdus in the file
     REQUIRE(!fits.has_next_hdu());
@@ -54,7 +55,7 @@ TEST_CASE("FITS open simple image primary") {
     REQUIRE(img_hdu.data_size() == BLOCK_SIZE);
 
     // this file contains a single header block and the data also fits in one block
-    REQUIRE(img_hdu.size() == 2 * BLOCK_SIZE);
+    REQUIRE(img_hdu.byte_size() == 2 * BLOCK_SIZE);
 
     REQUIRE_THROWS_WITH(fits.read_next_hdu(), "No more hdus in the file");
 }
@@ -85,6 +86,6 @@ TEST_CASE("FITS open image extension") {
     REQUIRE(img_hdu.data_size() == BLOCK_SIZE);
 
     // this file contains a single header block and the data also fits in one block
-    REQUIRE(img_hdu.size() == 2 * BLOCK_SIZE);
+    REQUIRE(img_hdu.byte_size() == 2 * BLOCK_SIZE);
     REQUIRE_THROWS_WITH(fits.read_next_hdu(), "No more hdus in the file");
 }

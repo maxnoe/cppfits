@@ -13,13 +13,13 @@ def empty():
 
 
 def simple_image():
-    primary = fits.PrimaryHDU(data=np.arange(12).reshape(4, 3).astype(np.uint16))
+    primary = fits.PrimaryHDU(data=np.arange(12).reshape(4, 3).astype(np.int16))
     hdul = fits.HDUList([primary])
     hdul.writeto('tests/data/simple_image.fits', overwrite=True)
 
 def image_extension():
     primary = fits.PrimaryHDU()
-    image = fits.ImageHDU(data=np.arange(12).reshape(4, 3).astype(np.uint16))
+    image = fits.ImageHDU(data=np.arange(12).reshape(4, 3).astype(np.int32))
     hdul = fits.HDUList([primary, image])
     hdul.writeto('tests/data/image_extension.fits', overwrite=True)
 

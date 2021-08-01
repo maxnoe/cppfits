@@ -60,7 +60,7 @@ struct Header {
     std::vector<HeaderEntry> lines;
 
 
-    size_t byte_size() const {
+    std::streamsize byte_size() const {
         return add_padding(lines.size() * ENTRY_SIZE);
     }
 

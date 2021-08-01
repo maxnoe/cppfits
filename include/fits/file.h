@@ -10,11 +10,13 @@
 #include <variant>
 #include <fstream>
 
-#include "fits/hdu.h"
 #include "fits/header.h"
 #include "fits/constants.h"
 
 namespace fits {
+
+class ImageHDU;
+using HDU = std::variant<ImageHDU>;
 
 struct FITSException : public std::exception {
     std::string msg;
@@ -44,6 +46,8 @@ class FITS {
         bool has_next_hdu();
         std::streampos address_of_next_hdu();
         void open(const std::string& filename);
+
+    friend class ImageHDU;
 };
 
 
