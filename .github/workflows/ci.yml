@@ -23,9 +23,13 @@ jobs:
       run: |
         sudo apt-get update --quiet
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-        sudo apt-get install cmake gcc-11 g++-11
+        sudo apt-get install cmake gcc-11 g++-11 libboost-dev
         pip install astropy
         python ./create_test_files.py
+
+        curl -L https://github.com/xtensor-stack/xtensor/archive/refs/tags/0.23.10.tar.gz | tar xz
+        cmake -S xtensor-0.23.10 -B xtensor-0.23.10
+        cmake --install xtensor-0.23.10
 
     - name: Build project
       run: |
