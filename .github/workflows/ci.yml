@@ -52,8 +52,6 @@ jobs:
 
     - name: Build project
       run: |
-        echo $BOOST_ROOT
-        ls $BOOST_ROOT
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
         cmake --build build -- -j
 
