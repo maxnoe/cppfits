@@ -49,10 +49,12 @@ int main (int argc, char* argv[]) {
             std::cout << "NAXIS: " << image_hdu.naxis() << "\n";
             std::cout << "Type:  " << image_hdu.type() << "\n";
 
-            if (image_hdu.type() == fits::ImageType::INT16) { 
+            if (image_hdu.type() == fits::ImageType::INT16) {
                 std::cout << image_hdu.read<int16_t>() << "\n";
-            } else if (image_hdu.type() == fits::ImageType::INT32) { 
+            } else if (image_hdu.type() == fits::ImageType::INT32) {
                 std::cout << image_hdu.read<int32_t>() << "\n";
+            } else if (image_hdu.type() == fits::ImageType::FLOAT) {
+                std::cout << image_hdu.read<float>() << "\n";
             }
         }
     }

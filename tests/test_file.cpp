@@ -6,13 +6,13 @@
 TEST_CASE("FITS open invalid") {
     fits::FITS fits;
     REQUIRE_THROWS_WITH(
-        fits.open("tests/data/invalid"),
+        fits.open("tests/data/invalid.fits"),
         "Not a FITS file"
     );
 }
 
 TEST_CASE("FITS open empty primary") {
-    fits::FITS fits("tests/data/empty_primary_only.fits");
+    fits::FITS fits("tests/data/empty.fits");
     REQUIRE(fits.hdus.size() == 0);
     REQUIRE(fits.has_next_hdu());
 
@@ -36,7 +36,7 @@ TEST_CASE("FITS open empty primary") {
 }
 
 TEST_CASE("FITS open simple image primary") {
-    fits::FITS fits("tests/data/simple_image.fits");
+    fits::FITS fits("tests/data/int16_image.fits");
     const auto& hdu = fits.read_next_hdu();
 
     // first HDU must be an ImageHDU
@@ -79,10 +79,10 @@ TEST_CASE("FITS open image extension") {
     REQUIRE(img_hdu.header.get<int64_t>("NAXIS") == 2);
     REQUIRE(img_hdu.header.get<int64_t>("NAXIS1") == 3);
     REQUIRE(img_hdu.header.get<int64_t>("NAXIS2") == 4);
-    REQUIRE(img_hdu.header.get<int64_t>("BITPIX") == 16);
+    REQUIRE(img_hdu.header.get<int64_t>("BITPIX") == 32);
 
-    // real data size is  12 * 2 bytes, but FITS is always padded to BLOCK_SIZE
-    REQUIRE(img_hdu.payload_size() == 24);
+    // real data size is  12 * 4 bytes, but FITS is always padded to BLOCK_SIZE
+    REQUIRE(img_hdu.payload_size() == 48);
     REQUIRE(img_hdu.data_size() == BLOCK_SIZE);
 
     // this file contains a single header block and the data also fits in one block
