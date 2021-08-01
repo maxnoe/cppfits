@@ -9,8 +9,6 @@ jobs:
       CC: gcc-11
       CXX: g++-11
       BOOST_URL: https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.tar.gz
-      CMAKE_PATH: $HOME/.local
-      BOOST_ROOT: $HOME/.local/boost
 
     steps:
     - name: Checkout
@@ -21,6 +19,14 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: '3.8'
+
+    - name: Set env variables
+      run: |
+        # github does not support recursive parsing of env variables above
+        # so need to do it like this
+        echo "CMAKE_PATH=$HOME/.local" >> $GITHUB_ENV
+        echo "BOOST_ROOT=$HOME/.local/boost" >> $GITHUB_ENV
+
 
     - name: Install Dependencies
       run: |
