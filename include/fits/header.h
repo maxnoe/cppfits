@@ -35,7 +35,7 @@ struct HeaderEntry {
     using value_t = std::variant<no_value, std::string, bool, int64_t, double>;
 
     std::string key;
-    value_t value = "";
+    value_t value = no_value{};
     std::string comment;
 
     HeaderEntry() = default;
