@@ -8,17 +8,16 @@
 #include "xtensor/xio.hpp"
 
 
-std::ostream& operator << (std::ostream& oss, std::monostate state) {
-    std::cout << "<No-Value>" << std::endl;
-    return oss;
-}
-
 auto print_header = [](const auto& hdu) {
     for (const auto& entry: hdu.header.lines) {
         std::cout << std::left << std::setw(8) << entry.key;
-        std::visit([](auto v){std::cout << "= " << v;}, entry.value);
+
+        if (entry.has_value()) {
+            std::visit([](auto v){std::cout << "= " << v;}, entry.value);
+        }
+
         if (entry.comment.size() > 0) {
-            if (entry.key != "COMMENT" && entry.key != "HISTORY") {
+            if (entry.has_value()) {
                 std::cout << " / ";
             }
             std::cout << entry.comment;
@@ -31,7 +30,7 @@ auto print_header = [](const auto& hdu) {
 int main (int argc, char* argv[]) {
     std::string path;
     if (argc == 1) {
-        path = "./tests/data/empty_primary_only.fits";
+        path = "./tests/data/empty.fits";
     } else {
         path = argv[1];
     }

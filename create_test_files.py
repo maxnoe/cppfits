@@ -15,7 +15,10 @@ def test_file(func):
 
 @test_file
 def empty():
-    return fits.HDUList([fits.PrimaryHDU()])
+    hdul = fits.HDUList([fits.PrimaryHDU()])
+    hdul[0].header['COMMENT'] = 'This is a'
+    hdul[0].header['COMMENT'] = 'multiline comment'
+    return hdul
 
 @test_file
 def int16_image():

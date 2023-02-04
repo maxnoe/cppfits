@@ -1,5 +1,6 @@
 #ifndef FITS_HEADER_H
 #define FITS_HEADER_H
+#include <iostream>
 #include <string_view>
 #include <string>
 #include <variant>
@@ -9,6 +10,11 @@
 #include "fits/constants.h"
 #include "fits/utils.h"
 
+
+inline std::ostream& operator << (std::ostream& oss, std::monostate state) {
+    oss << "<No-Value>";
+    return oss;
+}
 
 namespace fits {
 
@@ -28,7 +34,6 @@ inline std::string_view strip(std::string_view s) {
     s = right_strip(s);
     return s;
 }
-
 
 struct HeaderEntry {
     using no_value = std::monostate;
