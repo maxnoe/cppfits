@@ -2,7 +2,7 @@
 #include <regex>
 #include "fits/header.h"
 
-const std::regex float_regex{R"([+-]? *\d+)"};
+const std::regex int_regex{R"([+-]? *\d+)"};
 const std::regex double_regex{R"([+-]? *(\d+)?[.]?(\d+)? *([eEdD] *[+-]? *\d+)?)"};
 const std::regex string_regex{R"('((?:[^']|'')*)'(?: */ *(.*)) *?)"};
 
@@ -50,7 +50,7 @@ HeaderEntry::value_t parse_value(std::string_view s) {
     }
 
     std::string str{s};
-    if (std::regex_match(str, float_regex)) {
+    if (std::regex_match(str, int_regex)) {
         return static_cast<int64_t>(std::stoll(str));
     }
     if (std::regex_match(str, double_regex)) {
@@ -73,7 +73,7 @@ HeaderEntry HeaderEntry::parse(std::string_view line) {
     // Comment and History fields have the comment as rest of the line
     if (key == "COMMENT" || key == "HISTORY") {
         comment = std::string(right_strip(line.substr(8)));
-        return HeaderEntry(key, value, comment);
+        return HeaderEntry(key, HeaderEntry::no_value{}, comment);
     }
 
     // The value indicator
