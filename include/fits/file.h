@@ -1,17 +1,12 @@
 #ifndef FITS_FILE_H
 #define FITS_FILE_H value
 #include <string>
-#include <string_view>
 #include <vector>
 #include <cstddef>
 #include <stdexcept>
 #include <iostream>
-#include <optional>
 #include <variant>
 #include <fstream>
-
-#include "fits/header.h"
-#include "fits/constants.h"
 
 namespace fits {
 
