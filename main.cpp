@@ -9,7 +9,7 @@
 
 
 void print_header(const fits::Header& header) {
-    for (const auto& entry: header.lines) {
+    for (const auto& entry: header.entries()) {
         std::cout << std::left << std::setw(8) << entry.key;
 
         if (entry.has_value()) {

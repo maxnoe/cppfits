@@ -1,4 +1,5 @@
 #include "catch2/catch.hpp"
+#include "fits/bintablehdu.h"
 #include "fits/file.h"
 #include "fits/imagehdu.h"
 #include "fits/constants.h"
@@ -87,5 +88,35 @@ TEST_CASE("FITS open image extension") {
 
     // this file contains a single header block and the data also fits in one block
     REQUIRE(img_hdu->byte_size() == 2 * BLOCK_SIZE);
+    REQUIRE_THROWS_WITH(fits.read_next_hdu(), "No more hdus in the file");
+}
+
+
+TEST_CASE("FITS open bintable extension") {
+    fits::FITS fits("tests/data/simple_bintable.fits");
+
+    // skip first
+    REQUIRE(fits.has_next_hdu());
+    fits.read_next_hdu();
+
+    // We expect to find a bintable hdu
+    REQUIRE(fits.has_next_hdu());
+    const auto& hdu = fits.read_next_hdu();
+    REQUIRE(fits.loaded_hdus() == 2);
+    
+    auto table_hdu = dynamic_cast<const fits::BinTableHDU*>(&hdu);
+    REQUIRE(table_hdu != nullptr);
+
+    // this file contains a table of two rows of (int64, float64)
+    REQUIRE(table_hdu->header().get<int64_t>("NAXIS") == 2);
+    REQUIRE(table_hdu->header().get<int64_t>("NAXIS1") == 16);
+    REQUIRE(table_hdu->header().get<int64_t>("NAXIS2") == 1000);
+
+    // 2 rows of 16 bytes
+    REQUIRE(table_hdu->payload_size() == 16000);
+    REQUIRE(table_hdu->data_size() == 6 * BLOCK_SIZE);
+
+    // this file contains a single header block and the data needs 6 (as above) blocks
+    REQUIRE(table_hdu->byte_size() == 7 * BLOCK_SIZE);
     REQUIRE_THROWS_WITH(fits.read_next_hdu(), "No more hdus in the file");
 }

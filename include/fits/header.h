@@ -9,6 +9,7 @@
 
 #include "fits/constants.h"
 #include "fits/utils.h"
+#include "fits/string_utils.h"
 
 
 inline std::ostream& operator << (std::ostream& oss, std::monostate state) {
@@ -18,22 +19,6 @@ inline std::ostream& operator << (std::ostream& oss, std::monostate state) {
 
 namespace fits {
 
-
-inline std::string_view left_strip(std::string_view s) {
-    s.remove_prefix(std::min(s.find_first_not_of(" "), s.size()));
-    return s;
-}
-
-inline std::string_view right_strip(std::string_view s) {
-    s.remove_suffix(std::min(s.size() - s.find_last_not_of(" ") - 1, s.size()));
-    return s;
-}
-
-inline std::string_view strip(std::string_view s) {
-    s = left_strip(s);
-    s = right_strip(s);
-    return s;
-}
 
 struct HeaderEntry {
     using no_value = std::monostate;
@@ -60,22 +45,50 @@ struct HeaderEntry {
 
 
 struct Header {
-    friend class FITS;
-
-    std::vector<HeaderEntry> lines;
-
+    static Header read_from(std::istream& stream);
 
     std::streamsize byte_size() const {
-        return add_padding(lines.size() * ENTRY_SIZE);
+        return add_padding(entries_.size() * ENTRY_SIZE);
     }
 
     template<typename T>
     T get(const std::string& key) const {
-        return std::get<T>(vals.at(key).value);
+        return std::get<T>(entries_by_key_.at(key).value);
+    }
+
+    template<typename T>
+    T get(const std::string& key, T default_value) const {
+        // no such key
+        if (entries_by_key_.count(key) == 0) {
+            return default_value;
+        }
+
+        auto value = entries_by_key_.at(key).value;
+        if (!std::holds_alternative<T>(value)) {
+            return default_value;
+        }
+        return std::get<T>(value);
+    }
+
+    bool has_key(const std::string& key) const {
+        return entries_by_key_.count(key) != 0;
+    }
+
+    const std::vector<HeaderEntry>& entries() const {
+        return entries_;
+    }
+
+    const HeaderEntry& operator[](const std::string& key) const {
+        return entries_by_key_.at(key);
+    }
+
+    const HeaderEntry& operator[](const size_t idx) {
+        return entries_.at(idx);
     }
 
     private:
-        std::unordered_map<std::string, HeaderEntry> vals;
+        std::vector<HeaderEntry> entries_;
+        std::unordered_map<std::string, HeaderEntry> entries_by_key_;
 };
 
 } // namespace fits

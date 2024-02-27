@@ -1,8 +1,10 @@
 #include "fits/file.h"
 
+#include <istream>
 #include <memory>
 #include <fmt/core.h>
 
+#include "fits/bintablehdu.h"
 #include "fits/hdu.h"
 #include "fits/exceptions.h"
 #include "fits/imagehdu.h"
@@ -12,13 +14,13 @@ namespace fits {
 template<>
 std::string FITS::read<std::string>(const std::streamsize n){
     std::string s(n, '\0');
-    stream.read(s.data(), n);
-    s.resize(stream.gcount());
+    stream_.read(s.data(), n);
+    s.resize(stream_.gcount());
     return s;
 }
 
 void FITS::open(const std::string& filename) {
-    stream.open(filename, std::ios::in | std::ios::binary);
+    stream_.open(filename, std::ios::in | std::ios::binary);
     HeaderEntry marker;
     try {
         marker = HeaderEntry::parse(read<std::string>(ENTRY_SIZE));
@@ -28,7 +30,7 @@ void FITS::open(const std::string& filename) {
     } catch (...) {
         throw FITSException("Not a FITS file");
     }
-    stream.seekg(0);
+    stream_.seekg(0);
 }
 
 FITS::FITS(const std::string& filename){
@@ -36,17 +38,17 @@ FITS::FITS(const std::string& filename){
 }
 
 std::streampos FITS::address_of_next_hdu() {
-    if (hdus.empty()) {
+    if (hdus_.empty()) {
         return 0;
     }
-    return hdus.back()->address_of_next_hdu();
+    return hdus_.back()->address_of_next_hdu();
 }
 
 bool FITS::has_next_hdu() {
     std::streampos next_address = address_of_next_hdu();
-    stream.seekg(next_address);
-    stream.peek();
-    return stream.good();
+    stream_.seekg(next_address);
+    stream_.peek();
+    return stream_.good();
 }
 
 HDU& FITS::read_next_hdu() {
@@ -55,56 +57,51 @@ HDU& FITS::read_next_hdu() {
     }
 
     size_t next_address = address_of_next_hdu();
-    bool end_found = false;
-    char block[BLOCK_SIZE];
 
-    auto hdu = std::make_unique<ImageHDU>(next_address, *this);
+    std::unique_ptr<HDU> hdu;
+    Header header = Header::read_from(stream_);
 
-    while (!end_found) {
-        stream.read(block, BLOCK_SIZE);
-        auto read = stream.gcount();
-        if (read < BLOCK_SIZE) {
-            throw FITSException("Premature EOF");
+    // First is always an ImageHDU
+    if (loaded_hdus() == 0) {
+        hdu = std::make_unique<ImageHDU>(next_address, header, *this);
+    } else {
+        // for all xtensions, check xtension header
+        if (!header.has_key("XTENSION")) {
+            throw FITSException("No XTENSION header in HDU");
         }
 
-        for (size_t i=0; i < N_ENTRIES_BLOCK; i++) {
-            std::string_view line(&block[i * ENTRY_SIZE], ENTRY_SIZE);
-            hdu->header_.lines.push_back(HeaderEntry::parse(line));
-            HeaderEntry& entry = hdu->header_.lines.back();
-
-            // add entries with values to the hash map for easy lookup
-            if (entry.has_value()) {
-                hdu->header_.vals[entry.key] = entry;
-            }
-
-            if (hdu->header_.lines.back().key == "END") {
-                end_found = true;
-                break;
-            }
+        auto xtension = strip(header.get<std::string>("XTENSION"));
+        if (xtension == "IMAGE") {
+            hdu = std::make_unique<ImageHDU>(next_address, header, *this);
+        } else if (xtension == "BINTABLE") {
+            hdu = std::make_unique<BinTableHDU>(next_address, header, *this);
+        } else {
+            throw std::runtime_error(fmt::format("Unknown xtension: '{}'", xtension));
         }
     }
-    hdus.push_back(std::move(hdu));
-    return *hdus.back();
+    hdus_.push_back(std::move(hdu));
+    return *hdus_.back();
 }
+
 
 HDU& FITS::operator[](const size_t idx) {
     // already loaded, just return
-    if (idx < hdus.size()) {
-        return *hdus[idx];
+    if (idx < hdus_.size()) {
+        return *hdus_[idx];
     }
 
     // check if more HDUs are available
     while (has_next_hdu()) {
         read_next_hdu();
-        if (idx < hdus.size()) {
-            return *hdus[idx];
+        if (idx < hdus_.size()) {
+            return *hdus_[idx];
         }
     }
 
     auto msg = fmt::format(
         "HDU index {} is out of range for FITS file with {} hdus.",
         idx,
-        hdus.size()
+        hdus_.size()
     );
     throw NoSuchHDU(msg);
 }

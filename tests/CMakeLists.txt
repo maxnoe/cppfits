@@ -4,6 +4,7 @@ add_executable(tests
     tests.cpp
     test_header.cpp
     test_file.cpp
+    test_string_utils.cpp
 )
 
 

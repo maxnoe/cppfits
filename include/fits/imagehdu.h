@@ -1,7 +1,6 @@
 #ifndef FITS_IMAGEHDU_H
 #define FITS_IMAGEHDU_H
 
-
 #include <cstdlib>
 
 #include <fmt/core.h>
@@ -35,9 +34,9 @@ public:
         };
         auto img = xt::empty<T>(shape());
         auto buffer = img.data();
-        file->stream.seekg(data_address());
+        file_->stream_.seekg(data_address());
         for (size_t idx=0; idx < size(); idx++) {
-            file->stream.read(reinterpret_cast<char*>(&buffer[idx]), sizeof(T));
+            file_->stream_.read(reinterpret_cast<char*>(&buffer[idx]), sizeof(T));
             boost::endian::big_to_native_inplace(buffer[idx]);
         }
         return img;

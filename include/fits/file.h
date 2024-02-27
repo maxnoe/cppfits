@@ -25,17 +25,17 @@ class FITS {
         HDU& operator[](const size_t idx);
         HDU& operator[](const std::string& idx);
 
-        size_t loaded_hdus() {return hdus.size();}
+        size_t loaded_hdus() {return hdus_.size();}
 
         friend class HDU;
         friend class ImageHDU;
 
     private:
-        std::streampos address_of_next_hdu();
-        std::ifstream stream;
-        std::vector<std::unique_ptr<HDU>> hdus;
-        std::unordered_map<std::string, HDU*> hdus_by_extname;
+        std::ifstream stream_;
+        std::vector<std::unique_ptr<HDU>> hdus_;
+        std::unordered_map<std::string, HDU*> hdus_by_extname_;
 
+        std::streampos address_of_next_hdu();
         template<typename T>
         T read(const std::streamsize n);
 

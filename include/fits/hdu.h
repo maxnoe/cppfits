@@ -11,7 +11,10 @@ class HDU {
 
 public:
     HDU() {}
-    HDU(std::streampos address, FITS& file) : address_(address), file(&file) {}
+    HDU(std::streampos address, Header header, FITS& file) :
+        address_(address),
+        header_(std::move(header)),
+        file_(&file) {}
 
     virtual ~HDU() {}
 
@@ -38,7 +41,7 @@ public:
 
 protected:
     Header header_;
-    FITS* file = nullptr;
+    FITS* file_ = nullptr;
     std::streampos address_ = 0;
 
     friend class FITS;

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <regex>
+
 #include "fits/header.h"
+#include "fits/exceptions.h"
 
 const std::regex int_regex{R"([+-]? *\d+)"};
 const std::regex double_regex{R"([+-]? *(\d+)?[.]?(\d+)? *([eEdD] *[+-]? *\d+)?)"};
@@ -107,6 +109,37 @@ HeaderEntry HeaderEntry::parse(std::string_view line) {
     }
 
     return HeaderEntry(key, value, comment);
+}
+
+Header Header::read_from(std::istream& stream) {
+    bool end_found = false;
+    char block[BLOCK_SIZE];
+    Header header;
+
+    while (!end_found) {
+        stream.read(block, BLOCK_SIZE);
+        auto read = stream.gcount();
+        if (read < BLOCK_SIZE) {
+            throw FITSException("Premature EOF");
+        }
+
+        for (size_t i=0; i < N_ENTRIES_BLOCK; i++) {
+            std::string_view line(&block[i * ENTRY_SIZE], ENTRY_SIZE);
+            header.entries_.push_back(HeaderEntry::parse(line));
+            HeaderEntry& entry = header.entries_.back();
+
+            if (entry.key == "END") {
+                end_found = true;
+                break;
+            }
+
+            // add entries with values to the hash map for easy lookup
+            if (entry.has_value() && entry.key != "HISTORY" && entry.key != "COMMENT") {
+                header.entries_by_key_[entry.key] = entry;
+            }
+        }
+    }
+    return header;
 }
 
 }

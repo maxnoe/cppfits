@@ -6,7 +6,6 @@
 namespace fits {
 
 
-
 std::ostream& operator << (std::ostream& oss, const ImageType type) {
     oss << fmt::format("{}", type);
     return oss;

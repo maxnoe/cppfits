@@ -7,7 +7,7 @@ find_package(xtensor REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
 
-add_library(fits src/header.cpp src/file.cpp src/imagehdu.cpp)
+add_library(fits src/header.cpp src/file.cpp src/imagehdu.cpp src/bintablehdu.cpp)
 target_include_directories(fits PUBLIC include)
 set_target_properties(fits PROPERTIES
     CXX_STANDARD 17

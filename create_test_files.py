@@ -44,6 +44,20 @@ def image_extension():
     return fits.HDUList([primary, image])
 
 
+@test_file
+def simple_bintable():
+    rng = np.random.default_rng(0)
+    n_rows = 1000
+
+    data = np.empty(n_rows, dtype=[("index", np.int64), ("col1", np.float64)])
+    data["index"] = np.arange(n_rows)
+    data["col1"] = rng.normal(size=n_rows)
+
+    table = fits.BinTableHDU(data=data)
+    primary = fits.PrimaryHDU()
+    return fits.HDUList([primary, table])
+
+
 def create_all():
     OUTPATH.mkdir(parents=True, exist_ok=True)
 
