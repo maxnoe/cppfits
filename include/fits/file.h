@@ -1,49 +1,49 @@
 #ifndef FITS_FILE_H
-#define FITS_FILE_H value
+#define FITS_FILE_H
+
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
-#include <cstddef>
-#include <stdexcept>
 #include <iostream>
-#include <variant>
 #include <fstream>
 
 namespace fits {
 
+class HDU;
 class ImageHDU;
-using HDU = std::variant<ImageHDU>;
-
-struct FITSException : public std::exception {
-    std::string msg;
-    FITSException() = default;
-    FITSException(std::string msg) : msg(std::move(msg)) {};
-    virtual const char* what() const noexcept override {
-        return msg.c_str();
-    }
-};
-
-
-
 
 class FITS {
+    public:
+        FITS() = default;
+        FITS(const std::string& filename);
+
+        HDU& read_next_hdu();
+        bool has_next_hdu();
+        void open(const std::string& filename);
+
+        HDU& operator[](const size_t idx);
+        HDU& operator[](const std::string& idx);
+
+        size_t loaded_hdus() {return hdus.size();}
+
+        friend class HDU;
+        friend class ImageHDU;
+
     private:
+        std::streampos address_of_next_hdu();
         std::ifstream stream;
+        std::vector<std::unique_ptr<HDU>> hdus;
+        std::unordered_map<std::string, HDU*> hdus_by_extname;
 
         template<typename T>
         T read(const std::streamsize n);
 
-    public:
-        FITS() = default;
-        FITS(const std::string& filename);
-        std::vector<HDU> hdus;
-
-        HDU& read_next_hdu();
-        bool has_next_hdu();
-        std::streampos address_of_next_hdu();
-        void open(const std::string& filename);
-
-    friend class ImageHDU;
 };
+
+
+template<>
+std::string FITS::read<std::string>(const std::streamsize n);
 
 
 }

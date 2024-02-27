@@ -46,6 +46,11 @@ TEST_CASE("HeaderEntry::parse<bool>") {
     REQUIRE(e.key == "SIMPLE");
     REQUIRE(std::get<bool>(e.value));
     REQUIRE(e.comment == "conforms to FITS standard");
+
+    e = HeaderEntry::parse("FOO     =                    F / a false bool                                   ");
+    REQUIRE(e.key == "FOO");
+    REQUIRE(!std::get<bool>(e.value));
+    REQUIRE(e.comment == "a false bool");
 }
 
 TEST_CASE("HeaderEntry::parse<string>") {

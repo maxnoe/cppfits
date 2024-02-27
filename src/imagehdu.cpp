@@ -1,20 +1,14 @@
-#include "fits/hdu.h"
+#include "fits/imagehdu.h"
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace fits {
 
-std::ostream& operator << (std::ostream& oss, const ImageType type) {
-    switch (type) {
-        case ImageType::FLOAT:  oss << "FLOAT"; break;
-        case ImageType::DOUBLE: oss << "DOUBLE"; break;
-        case ImageType::UINT8:  oss << "UINT8"; break;
-        case ImageType::INT16:  oss << "INT16"; break;
-        case ImageType::INT32:  oss << "INT32"; break;
-        case ImageType::INT64:  oss << "INT64"; break;
-        default: oss << "INVALID";
-    }
 
+
+std::ostream& operator << (std::ostream& oss, const ImageType type) {
+    oss << fmt::format("{}", type);
     return oss;
 }
 
@@ -30,20 +24,20 @@ std::streamsize ImageHDU::payload_size() const {
     }
 
     // negative BITPIX means floating, must be ignored here
-    size *= llabs(header.get<int64_t>("BITPIX")) / 8;
+    size *= llabs(header_.get<int64_t>("BITPIX")) / 8;
     return size;
 }
 
 size_t ImageHDU::naxis() const {
-    return header.get<int64_t>("NAXIS");
+    return header_.get<int64_t>("NAXIS");
 }
 
 size_t  ImageHDU::naxis(size_t axis) const {
-    return header.get<int64_t>(fmt::format("NAXIS{}", axis));
+    return header_.get<int64_t>(fmt::format("NAXIS{}", axis));
 }
 
 ImageType ImageHDU::type() const {
-    return ImageType{header.get<int64_t>("BITPIX")};
+    return ImageType{header_.get<int64_t>("BITPIX")};
 }
 
 size_t ImageHDU::size() const {
@@ -67,4 +61,4 @@ std::vector<size_t> ImageHDU::shape() const {
     return shp;
 }
 
-}
+} // namespace fits

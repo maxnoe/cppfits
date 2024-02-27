@@ -1,12 +1,18 @@
 #include "fits/file.h"
+
+#include <memory>
+#include <fmt/core.h>
+
 #include "fits/hdu.h"
+#include "fits/exceptions.h"
+#include "fits/imagehdu.h"
 
 namespace fits {
 
 template<>
 std::string FITS::read<std::string>(const std::streamsize n){
     std::string s(n, '\0');
-    stream.read(&s.front(), n);
+    stream.read(s.data(), n);
     s.resize(stream.gcount());
     return s;
 }
@@ -25,7 +31,6 @@ void FITS::open(const std::string& filename) {
     stream.seekg(0);
 }
 
-
 FITS::FITS(const std::string& filename){
     open(filename);
 }
@@ -34,10 +39,7 @@ std::streampos FITS::address_of_next_hdu() {
     if (hdus.empty()) {
         return 0;
     }
-    const auto get_next_address = [](const auto& hdu) {
-        return hdu.address + hdu.byte_size();
-    };
-    return std::visit(get_next_address, hdus.back());
+    return hdus.back()->address_of_next_hdu();
 }
 
 bool FITS::has_next_hdu() {
@@ -56,8 +58,7 @@ HDU& FITS::read_next_hdu() {
     bool end_found = false;
     char block[BLOCK_SIZE];
 
-    hdus.push_back(ImageHDU(next_address, *this));
-    ImageHDU& hdu = std::get<ImageHDU>(hdus.back());
+    auto hdu = std::make_unique<ImageHDU>(next_address, *this);
 
     while (!end_found) {
         stream.read(block, BLOCK_SIZE);
@@ -68,21 +69,44 @@ HDU& FITS::read_next_hdu() {
 
         for (size_t i=0; i < N_ENTRIES_BLOCK; i++) {
             std::string_view line(&block[i * ENTRY_SIZE], ENTRY_SIZE);
-            hdu.header.lines.push_back(HeaderEntry::parse(line));
-            HeaderEntry& entry = hdu.header.lines.back();
+            hdu->header_.lines.push_back(HeaderEntry::parse(line));
+            HeaderEntry& entry = hdu->header_.lines.back();
 
             // add entries with values to the hash map for easy lookup
             if (entry.has_value()) {
-                hdu.header.vals[entry.key] = entry;
+                hdu->header_.vals[entry.key] = entry;
             }
 
-            if (hdu.header.lines.back().key == "END") {
+            if (hdu->header_.lines.back().key == "END") {
                 end_found = true;
                 break;
             }
         }
     }
-    return hdus.back();
+    hdus.push_back(std::move(hdu));
+    return *hdus.back();
+}
+
+HDU& FITS::operator[](const size_t idx) {
+    // already loaded, just return
+    if (idx < hdus.size()) {
+        return *hdus[idx];
+    }
+
+    // check if more HDUs are available
+    while (has_next_hdu()) {
+        read_next_hdu();
+        if (idx < hdus.size()) {
+            return *hdus[idx];
+        }
+    }
+
+    auto msg = fmt::format(
+        "HDU index {} is out of range for FITS file with {} hdus.",
+        idx,
+        hdus.size()
+    );
+    throw NoSuchHDU(msg);
 }
 
 }

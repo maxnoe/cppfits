@@ -4,16 +4,17 @@ project(CPPFITS VERSION 0.1.0 LANGUAGES CXX)
 # 1.74 needed for flaoting point endianness
 find_package(Boost 1.74.0 REQUIRED)
 find_package(xtensor REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
 
-add_library(fits src/header.cpp src/file.cpp src/hdu.cpp)
+add_library(fits src/header.cpp src/file.cpp src/imagehdu.cpp)
 target_include_directories(fits PUBLIC include)
 set_target_properties(fits PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
-target_link_libraries(fits PUBLIC xtensor Boost::boost)
+target_link_libraries(fits PUBLIC xtensor Boost::boost fmt::fmt)
 
 add_subdirectory(tests)
 
