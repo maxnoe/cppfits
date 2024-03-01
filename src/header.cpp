@@ -3,6 +3,7 @@
 
 #include "fits/header.h"
 #include "fits/exceptions.h"
+#include "fits/string_utils.h"
 
 const std::regex int_regex{R"([+-]? *\d+)"};
 const std::regex double_regex{R"([+-]? *(\d+)?[.]?(\d+)? *([eEdD] *[+-]? *\d+)?)"};

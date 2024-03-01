@@ -49,11 +49,13 @@ def simple_bintable():
     rng = np.random.default_rng(0)
     n_rows = 1000
 
-    data = np.empty(n_rows, dtype=[("index", np.int64), ("col1", np.float64)])
+    data = np.empty(n_rows, dtype=[("index", np.int64), ("col1", np.float64), ("col2", np.float32, (1, 2, 1, 1))])
     data["index"] = np.arange(n_rows)
     data["col1"] = rng.normal(size=n_rows)
+    data["col2"] = rng.normal(size=(n_rows, 1, 2, 1, 1))
 
     table = fits.BinTableHDU(data=data)
+    table.columns["col1"].unit = "m"
     primary = fits.PrimaryHDU()
     return fits.HDUList([primary, table])
 

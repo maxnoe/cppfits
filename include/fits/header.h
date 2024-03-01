@@ -9,7 +9,6 @@
 
 #include "fits/constants.h"
 #include "fits/utils.h"
-#include "fits/string_utils.h"
 
 
 inline std::ostream& operator << (std::ostream& oss, std::monostate state) {

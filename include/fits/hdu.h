@@ -3,6 +3,7 @@
 
 #include "fits/header.h"
 #include "fits/file.h"
+#include <utility>
 
 namespace fits {
 
@@ -11,9 +12,9 @@ class HDU {
 
 public:
     HDU() {}
-    HDU(std::streampos address, Header header, FITS& file) :
+    HDU(std::streampos address, Header&& header, FITS& file) :
         address_(address),
-        header_(std::move(header)),
+        header_(header),
         file_(&file) {}
 
     virtual ~HDU() {}

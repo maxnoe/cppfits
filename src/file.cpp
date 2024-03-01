@@ -8,6 +8,7 @@
 #include "fits/hdu.h"
 #include "fits/exceptions.h"
 #include "fits/imagehdu.h"
+#include "fits/string_utils.h"
 
 namespace fits {
 
@@ -63,7 +64,7 @@ HDU& FITS::read_next_hdu() {
 
     // First is always an ImageHDU
     if (loaded_hdus() == 0) {
-        hdu = std::make_unique<ImageHDU>(next_address, header, *this);
+        hdu = std::make_unique<ImageHDU>(next_address, std::move(header), *this);
     } else {
         // for all xtensions, check xtension header
         if (!header.has_key("XTENSION")) {
@@ -72,9 +73,9 @@ HDU& FITS::read_next_hdu() {
 
         auto xtension = strip(header.get<std::string>("XTENSION"));
         if (xtension == "IMAGE") {
-            hdu = std::make_unique<ImageHDU>(next_address, header, *this);
+            hdu = std::make_unique<ImageHDU>(next_address, std::move(header), *this);
         } else if (xtension == "BINTABLE") {
-            hdu = std::make_unique<BinTableHDU>(next_address, header, *this);
+            hdu = std::make_unique<BinTableHDU>(next_address, std::move(header), *this);
         } else {
             throw std::runtime_error(fmt::format("Unknown xtension: '{}'", xtension));
         }

@@ -44,9 +44,6 @@ int main (int argc, char* argv[]) {
         std::cout << "\n\n";
 
         if (auto image_hdu = dynamic_cast<const fits::ImageHDU*>(&hdu)) {
-            std::cout << "NAXIS: " << image_hdu->naxis() << "\n";
-            std::cout << "Type:  " << image_hdu->type() << "\n";
-
             if (image_hdu->type() == fits::ImageType::INT16) {
                 std::cout << image_hdu->read<int16_t>() << "\n";
             } else if (image_hdu->type() == fits::ImageType::INT32) {

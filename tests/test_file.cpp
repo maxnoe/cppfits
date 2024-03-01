@@ -109,14 +109,30 @@ TEST_CASE("FITS open bintable extension") {
 
     // this file contains a table of two rows of (int64, float64)
     REQUIRE(table_hdu->header().get<int64_t>("NAXIS") == 2);
-    REQUIRE(table_hdu->header().get<int64_t>("NAXIS1") == 16);
+    REQUIRE(table_hdu->header().get<int64_t>("NAXIS1") == 24);
     REQUIRE(table_hdu->header().get<int64_t>("NAXIS2") == 1000);
 
     // 2 rows of 16 bytes
-    REQUIRE(table_hdu->payload_size() == 16000);
-    REQUIRE(table_hdu->data_size() == 6 * BLOCK_SIZE);
+    REQUIRE(table_hdu->payload_size() == 24000);
+    REQUIRE(table_hdu->data_size() == 9 * BLOCK_SIZE);
 
     // this file contains a single header block and the data needs 6 (as above) blocks
-    REQUIRE(table_hdu->byte_size() == 7 * BLOCK_SIZE);
+    REQUIRE(table_hdu->byte_size() == 10 * BLOCK_SIZE);
     REQUIRE_THROWS_WITH(fits.read_next_hdu(), "No more hdus in the file");
+
+    auto index = table_hdu->column_descriptions().at(0);
+    REQUIRE(index.name == "index");
+    REQUIRE(index.size == 1);
+    REQUIRE(index.type == fits::ColumnType::I64);
+
+    auto col1 = table_hdu->column_descriptions().at(1);
+    REQUIRE(col1.name == "col1");
+    REQUIRE(col1.size == 1);
+    REQUIRE(col1.type == fits::ColumnType::F64);
+
+    auto col2 = table_hdu->column_descriptions().at(2);
+    REQUIRE(col2.name == "col2");
+    REQUIRE(col2.size == 2);
+    REQUIRE(col2.type == fits::ColumnType::F32);
+    REQUIRE(col2.shape.value() == std::vector<size_t>{1, 1, 2, 1});
 }
