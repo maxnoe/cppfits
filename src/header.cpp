@@ -143,4 +143,13 @@ Header Header::read_from(std::istream& stream) {
     return header;
 }
 
+template<>
+double Header::get(const std::string& key) const {
+    auto entry = entries_by_key_.at(key);
+    if (std::holds_alternative<int64_t>(entry.value)) {
+        return static_cast<double>(std::get<int64_t>(entry.value));
+    }
+    return std::get<double>(entry.value);
+}
+
 }

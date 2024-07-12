@@ -1,5 +1,6 @@
 #ifndef FITS_HEADER_H
 #define FITS_HEADER_H
+#include <cstdint>
 #include <iostream>
 #include <string_view>
 #include <string>
@@ -89,6 +90,12 @@ struct Header {
         std::vector<HeaderEntry> entries_;
         std::unordered_map<std::string, HeaderEntry> entries_by_key_;
 };
+
+
+// overload to allow getting ints as doubles
+template<>
+double Header::get(const std::string& key) const;
+
 
 } // namespace fits
 #endif /* ifndef FITS_HEADER_H */
