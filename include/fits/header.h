@@ -53,17 +53,17 @@ struct Header {
 
     template<typename T>
     T get(const std::string& key) const {
-        return std::get<T>(entries_by_key_.at(key).value);
+        return std::get<T>((*this)[key].value);
     }
 
     template<typename T>
     T get(const std::string& key, T default_value) const {
         // no such key
-        if (entries_by_key_.count(key) == 0) {
+        if (!index_of_key_.contains(key)) {
             return default_value;
         }
 
-        auto value = entries_by_key_.at(key).value;
+        auto value = (*this)[key].value;
         if (!std::holds_alternative<T>(value)) {
             return default_value;
         }
@@ -71,7 +71,7 @@ struct Header {
     }
 
     bool has_key(const std::string& key) const {
-        return entries_by_key_.count(key) != 0;
+        return index_of_key_.contains(key);
     }
 
     const std::vector<HeaderEntry>& entries() const {
@@ -79,7 +79,7 @@ struct Header {
     }
 
     const HeaderEntry& operator[](const std::string& key) const {
-        return entries_by_key_.at(key);
+        return entries_[index_of_key_.at(key)];
     }
 
     const HeaderEntry& operator[](const size_t idx) {
@@ -88,7 +88,7 @@ struct Header {
 
     private:
         std::vector<HeaderEntry> entries_;
-        std::unordered_map<std::string, HeaderEntry> entries_by_key_;
+        std::unordered_map<std::string, size_t> index_of_key_;
 };
 
 

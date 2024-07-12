@@ -10,7 +10,7 @@ the FITS format.
 This project uses catch2 for unit tests and will probably make
 use of boost and/or Abseil to solve specific tasks.
 
-C++17 is required, mainly for `std::variant`, which is used for runtime
+C++20 is required, mainly for `std::variant`, which is used for runtime
 polymorphism, e.g. the value of a FITS header entry is a
 ```
 using value_t = std::variant<std::string, bool, int64_t, double>;

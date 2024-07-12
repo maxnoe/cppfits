@@ -117,6 +117,7 @@ Header Header::read_from(std::istream& stream) {
     char block[BLOCK_SIZE];
     Header header;
 
+    size_t index = 0;
     while (!end_found) {
         stream.read(block, BLOCK_SIZE);
         auto read = stream.gcount();
@@ -126,17 +127,18 @@ Header Header::read_from(std::istream& stream) {
 
         for (size_t i=0; i < N_ENTRIES_BLOCK; i++) {
             std::string_view line(&block[i * ENTRY_SIZE], ENTRY_SIZE);
+
             header.entries_.push_back(HeaderEntry::parse(line));
-            HeaderEntry& entry = header.entries_.back();
+            const auto& entry = header.entries_.back();
+
+            if (entry.has_value()) {
+                header.index_of_key_[entry.key] = index;
+            }
+            index++;
 
             if (entry.key == "END") {
                 end_found = true;
                 break;
-            }
-
-            // add entries with values to the hash map for easy lookup
-            if (entry.has_value() && entry.key != "HISTORY" && entry.key != "COMMENT") {
-                header.entries_by_key_[entry.key] = entry;
             }
         }
     }
@@ -145,11 +147,11 @@ Header Header::read_from(std::istream& stream) {
 
 template<>
 double Header::get(const std::string& key) const {
-    auto entry = entries_by_key_.at(key);
-    if (std::holds_alternative<int64_t>(entry.value)) {
-        return static_cast<double>(std::get<int64_t>(entry.value));
+    const auto& value = (*this)[key].value;
+    if (std::holds_alternative<int64_t>(value)) {
+        return static_cast<double>(std::get<int64_t>(value));
     }
-    return std::get<double>(entry.value);
+    return std::get<double>(value);
 }
 
 }

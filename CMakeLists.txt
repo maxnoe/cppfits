@@ -9,8 +9,8 @@ find_package(fmt CONFIG REQUIRED)
 
 add_library(fits src/header.cpp src/file.cpp src/imagehdu.cpp src/bintablehdu.cpp)
 target_include_directories(fits PUBLIC include)
+target_compile_features(fits PUBLIC cxx_std_20)
 set_target_properties(fits PROPERTIES
-    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
@@ -21,7 +21,6 @@ add_subdirectory(tests)
 add_executable(main main.cpp)
 target_link_libraries(main PRIVATE fits)
 set_target_properties(main PROPERTIES
-    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
