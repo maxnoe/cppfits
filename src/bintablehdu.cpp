@@ -3,9 +3,9 @@
 #include "fits/string_utils.h"
 #include <cstdint>
 #include <fmt/core.h>
-#include <fmt/ranges.h>
 
 #include <ios>
+#include <numeric>
 #include <regex>
 #include <string>
 
@@ -55,6 +55,17 @@ ColumnDescription get_column_description(Header& header, size_t index) {
         } catch (...) {
             throw FITSException(fmt::format("Invalid TDIM{}: '{}'", index, tdim));
         }
+        size_t size_from_tdim = std::accumulate(desc.shape->cbegin(), desc.shape->cend(), 1, std::multiplies<size_t>());
+        if (size_from_tdim != desc.size) {
+            throw FITSException(fmt::format("TDIM{0}='{1}' does not match repeat count of TFORM{0}='{2}'", index, tdim, tform));
+        }
+    }
+
+    desc.transform_scale = header.get<double>(fmt::format("TSCAL{}", index), 1.0);
+    desc.transform_offset = header.get<double>(fmt::format("TZERO{}", index), 0.0);
+
+    if (header.has_key(fmt::format("TNULL{}", index))) {
+        desc.null_value = header.get<int64_t>(fmt::format("TNULL{}", index));
     }
 
     // optional attributes
